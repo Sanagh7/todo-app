@@ -41,17 +41,72 @@ export interface TodoFilter {
 
 const API_URL = 'http://localhost:4000/api/todos';
 
-export const getTodos = (filters?: TodoFilter) => 
-  axios.get<Todo[]>(API_URL, { params: filters });
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: 'http://localhost:4000/api',
+  timeout: 10000, // 10 second timeout
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add a request interceptor
+api.interceptors.request.use(
+  (config) => {
+    // You could add authorization headers here if needed
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If the error is due to a network issue and we haven't retried yet
+    if (error.message.includes('Network Error') && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      // Wait a moment before retrying
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Retry the request
+      return api(originalRequest);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export const getTodos = (filters?: TodoFilter) => {
+  console.log("API getTodos called with filters:", filters);
+  // Don't send undefined or empty filter values to avoid confusing the server
+  const cleanFilters: Record<string, any> = { ...filters };
+  
+  // Remove undefined or null values
+  Object.keys(cleanFilters).forEach(key => {
+    if (cleanFilters[key] === undefined || cleanFilters[key] === null) {
+      delete cleanFilters[key];
+    }
+  });
+  
+  return api.get<Todo[]>('/todos', { params: cleanFilters });
+};
 
 export const addTodo = (data: TodoCreate) => 
-  axios.post<Todo>(API_URL, data);
+  api.post<Todo>('/todos', data);
 
 export const updateTodo = (id: number, data: TodoUpdate) => 
-  axios.put<Todo>(`${API_URL}/${id}`, data);
+  api.put<Todo>(`/todos/${id}`, data);
 
 export const deleteTodo = (id: number) => 
-  axios.delete<{ success: boolean }>(`${API_URL}/${id}`);
+  api.delete<{ success: boolean }>(`/todos/${id}`);
 
 export const getCategories = () => 
-  axios.get<string[]>('http://localhost:4000/api/categories'); 
+  api.get<string[]>('/categories'); 

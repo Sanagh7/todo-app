@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, TextField, Button, CircularProgress, Alert, 
   FormControl, InputLabel, Select, MenuItem, Chip, 
-  OutlinedInput, SelectChangeEvent
+  OutlinedInput, SelectChangeEvent, SxProps, Theme, Typography
 } from '@mui/material';
 import { TodoCreate } from '../api';
 
@@ -12,9 +12,10 @@ interface TodoFormProps {
   onAdd: (data: TodoCreate) => Promise<void>;
   loading: boolean;
   categories: string[];
+  sx?: SxProps<Theme>;
 }
 
-const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories }) => {
+const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories, sx }) => {
   const [name, setName] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [dateTime, setDateTime] = useState('');
@@ -73,27 +74,53 @@ const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories }) => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3, p: 3, borderRadius: 2, bgcolor: 'background.paper', boxShadow: 1 }}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+    <Box 
+      component="form" 
+      onSubmit={handleSubmit} 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 2, 
+        mb: 3, 
+        p: 3, 
+        borderRadius: 2, 
+        bgcolor: 'background.paper', 
+        boxShadow: 1,
+        width: '100%',
+        maxWidth: '100%',
+        overflowX: 'hidden',
+        ...sx
+      }}
+    >
+      <Typography variant="h6" color="primary" gutterBottom>Add New Task</Typography>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2fr 3fr' },
+        gap: 2 
+      }}>
         <TextField
           label="Task Name"
           value={name}
           onChange={e => setName(e.target.value)}
           required
-          sx={{ flexGrow: 1, minWidth: '200px' }}
           size="small"
+          fullWidth
         />
         <TextField
           label="Description"
           value={shortDescription}
           onChange={e => setShortDescription(e.target.value)}
           required
-          sx={{ flexGrow: 2, minWidth: '300px' }}
           size="small"
+          fullWidth
         />
       </Box>
       
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ 
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+        gap: 2 
+      }}>
         <TextField
           label="Date & Time"
           type="datetime-local"
@@ -102,10 +129,15 @@ const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories }) => {
           required
           size="small"
           InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: '200px' }}
+          placeholder="YYYY-MM-DDThh:mm"
+          inputProps={{
+            min: new Date().toISOString().slice(0, 16)
+          }}
+          helperText="Select a due date and time"
+          fullWidth
         />
         
-        <FormControl size="small" sx={{ minWidth: '150px' }}>
+        <FormControl size="small" fullWidth>
           <InputLabel>Priority</InputLabel>
           <Select
             value={priority}
@@ -116,9 +148,10 @@ const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories }) => {
               <MenuItem key={option} value={option}>{option}</MenuItem>
             ))}
           </Select>
+          <Box sx={{ mt: 1, fontSize: '0.75rem', color: 'text.secondary' }}>Set task priority</Box>
         </FormControl>
         
-        <FormControl size="small" sx={{ minWidth: '200px' }}>
+        <FormControl size="small" fullWidth>
           <InputLabel>Category</InputLabel>
           <Select
             value={category}
@@ -146,6 +179,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ onAdd, loading, categories }) => {
               </Box>
             </MenuItem>
           </Select>
+          <Box sx={{ mt: 1, fontSize: '0.75rem', color: 'text.secondary' }}>Choose or create category</Box>
         </FormControl>
       </Box>
       

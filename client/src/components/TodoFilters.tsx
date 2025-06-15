@@ -10,7 +10,10 @@ import {
   MenuItem,
   IconButton,
   Collapse,
-  Paper
+  Paper,
+  SelectChangeEvent,
+  SxProps,
+  Theme
 } from '@mui/material';
 import { 
   Search as SearchIcon,
@@ -22,15 +25,18 @@ import { TodoFilter } from '../api';
 interface TodoFiltersProps {
   onFilterChange: (filters: TodoFilter) => void;
   categories: string[];
+  sx?: SxProps<Theme>;
 }
 
-const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories }) => {
+const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories, sx }) => {
   const [filters, setFilters] = useState<TodoFilter>({ filter: 'all' });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   
   const handleFilterChange = (value: 'all' | 'done' | 'upcoming' | null) => {
-    const newFilters = { ...filters, filter: value || 'all' };
+    const filterValue = value || 'all';
+    console.log(`Setting filter to: ${filterValue}`);
+    const newFilters = { ...filters, filter: filterValue };
     setFilters(newFilters);
     onFilterChange(newFilters);
   };
@@ -48,8 +54,8 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories })
     onFilterChange(newFilters);
   };
   
-  const handleCategoryChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-    const category = e.target.value as string;
+  const handleCategoryChange = (e: SelectChangeEvent) => {
+    const category = e.target.value;
     const newFilters = { 
       ...filters, 
       category: category === 'all' ? undefined : category 
@@ -58,8 +64,8 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories })
     onFilterChange(newFilters);
   };
   
-  const handlePriorityChange = (e: React.ChangeEvent<{ value: unknown }>) => {
-    const priority = e.target.value as string;
+  const handlePriorityChange = (e: SelectChangeEvent) => {
+    const priority = e.target.value;
     const newFilters = { 
       ...filters, 
       priority: priority === 'all' ? undefined : priority as any
@@ -81,11 +87,11 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories })
   };
   
   return (
-    <Paper sx={{ mb: 3, p: 2 }} elevation={1}>
+    <Paper sx={{ mb: 3, p: 2, width: '100%', ...sx }} elevation={1}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <ToggleButtonGroup
-            value={filters.filter}
+            value={filters.filter || 'all'}
             exclusive
             onChange={(_, val) => handleFilterChange(val || 'all')}
             aria-label="status filter"
@@ -132,7 +138,7 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories })
               <InputLabel>Category</InputLabel>
               <Select
                 value={filters.category || 'all'}
-                onChange={handleCategoryChange as any}
+                onChange={handleCategoryChange}
                 label="Category"
               >
                 <MenuItem value="all">All Categories</MenuItem>
@@ -146,7 +152,7 @@ const TodoFilters: React.FC<TodoFiltersProps> = ({ onFilterChange, categories })
               <InputLabel>Priority</InputLabel>
               <Select
                 value={filters.priority || 'all'}
-                onChange={handlePriorityChange as any}
+                onChange={handlePriorityChange}
                 label="Priority"
               >
                 <MenuItem value="all">All Priorities</MenuItem>

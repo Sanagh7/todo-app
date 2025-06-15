@@ -29,13 +29,30 @@ app.get('/api/todos', [
     // Status filter
     if (filter === 'done') where.isDone = true;
     if (filter === 'upcoming') where = { isDone: false, dateTime: { gt: new Date() } };
+    // "all" filter is implicit (empty where object)
     
     // Search by name or description
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { shortDescription: { contains: search, mode: 'insensitive' } }
-      ];
+      // If we already have filter conditions, add search as an AND condition
+      if (where.isDone !== undefined || where.dateTime !== undefined) {
+        where = {
+          AND: [
+            where,
+            {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { shortDescription: { contains: search, mode: 'insensitive' } }
+              ]
+            }
+          ]
+        };
+      } else {
+        // Simple search with no other conditions
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { shortDescription: { contains: search, mode: 'insensitive' } }
+        ];
+      }
     }
     
     // Category filter
@@ -47,6 +64,9 @@ app.get('/api/todos', [
     if (priority) {
       where.priority = priority;
     }
+    
+    console.log("Query filter:", filter);
+    console.log("Final where clause:", JSON.stringify(where));
 
     // Get todos with filters applied
     const todos = await prisma.todo.findMany({ 
